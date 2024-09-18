@@ -1,61 +1,29 @@
 import os
 from dotenv import load_dotenv
 from sqlalchemy import create_engine, text
-import psycopg2
+import pytest
 
-# Load env variables
 load_dotenv()
 
-# Retrieve database connection parameters
 DB_USERNAME = os.getenv("DB_USERNAME")
 DB_PASSWORD = os.getenv("DB_PASSWORD")
 DB_NAME = os.getenv("DB_NAME")
+DB_NAME_TEST = os.getenv("DB_NAME_TEST", "edutrack_test")
 DB_HOST = os.getenv("DB_HOST")
 DB_PORT = os.getenv("DB_PORT")
 DB_SSLMODE = os.getenv("DB_SSLMODE")
 
-# Construct database URL
-SQLALCHEMY_DATABASE_URL = f"postgresql://{DB_USERNAME}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}?sslmode={DB_SSLMODE}"
-
-def print_connection_info():
-    print("Database Connection Information:")
-    print(f"Username: {DB_USERNAME}")
-    print(f"Database: {DB_NAME}")
-    print(f"Host: {DB_HOST}")
-    print(f"Port: {DB_PORT}")
-    print(f"SSL Mode: {DB_SSLMODE}")
-    print(f"Connection URL: postgresql://{DB_USERNAME}:****@{DB_HOST}:{DB_PORT}/{DB_NAME}?sslmode={DB_SSLMODE}")
-    
-# Testing the connection
-
-def test_sqlalchemy_connection():
-    print("\nTesting SQLAlchemy connection:")
-    engine = create_engine(SQLALCHEMY_DATABASE_URL)
+@pytest.mark.parametrize("db_name", [DB_NAME, DB_NAME_TEST])
+def test_connection(db_name):
+    db_url = f"postgresql://{DB_USERNAME}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{db_name}?sslmode={DB_SSLMODE}"
+    engine = create_engine(db_url)
     try:
-        with engine.connect() as connection:
-            result = connection.execute(text("SELECT 1"))
-            print("SQLAlchemy connection successful!")
+        with engine.connect() as conn:
+            result = conn.execute(text("SELECT 1"))
+            assert result.scalar() == 1
+            print(f"Connection to {db_name} successful!")
     except Exception as e:
-        print(f"SQLAlchemy connection failed. Error: {e}")
-        
-# Testing psycopg2 connection
+        pytest.fail(f"Connection to {db_name} failed. Error: {e}")
 
-def test_psycopg2_connection():
-    print("\nTesting psycopg2 connection:")
-    try:
-        conn = psycopg2.connect(
-            dbname=DB_NAME,
-            user=DB_USERNAME,
-            password=DB_PASSWORD,
-            host=DB_HOST,
-            port=DB_PORT
-        )
-        print("psycopg2 connection successful!")
-        conn.close()
-    except Exception as e:
-        print(f"psycopg2 connection failed. Error: {e}")
-        
 if __name__ == "__main__":
-    print_connection_info()
-    test_sqlalchemy_connection()
-    test_psycopg2_connection()
+    pytest.main([__file__])
