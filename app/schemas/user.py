@@ -16,4 +16,4 @@ class User(UserBase):
     
     class Config:
         # Allows pydantic to work with SQLAlchemy models
-        orm_mode = True
+        from_attributes = True
