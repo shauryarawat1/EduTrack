@@ -3,6 +3,9 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from app.main import app
 from app.db.base import Base, get_db
+import os
+
+os.environ["DB_NAME"] = "edutrack_test"
 
 # Using SQLLite for testing as it doesnt require a server
 SQLALCHEMY_DATABASE_URL = "sqllite:///./test.db"
