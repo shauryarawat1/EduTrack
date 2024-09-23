@@ -44,10 +44,10 @@ client = TestClient(app)
 
 def test_create_user():
     response = client.post(
-        "/users/",
+        "/api/v1/users/",  # Updated endpoint
         json={"email": "test@example.com", "password": "testpassword"}
     )
-    assert response.status_code == 200
+    assert response.status_code == 200, f"Response: {response.json()}"
     data = response.json()
     assert data["email"] == "test@example.com"
     assert "id" in data
