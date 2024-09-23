@@ -1,8 +1,10 @@
 from sqlalchemy import create_engine
-from sqlalchemy.orm import declarative_base
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import declarative_base, sessionmaker
 from dotenv import load_dotenv
 import os
+
+# Load environment variables
+load_dotenv()
 
 DB_USERNAME = os.getenv("DB_USERNAME")
 DB_PASSWORD = os.getenv("DB_PASSWORD")
@@ -33,3 +35,10 @@ def get_db():
     finally:
         # Ensures that database session is closed after each request
         db.close()
+        
+# Importing all the models from the folder (User, Course, etc)
+from app.models.user import User
+from app.models.course import Course
+
+# Create tables 
+Base.metadata.create_all(bind=engine)
