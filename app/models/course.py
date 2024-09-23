@@ -9,7 +9,7 @@ user_course = Table('user_course', Base.metadata,
 )
 
 class Course(Base):
-    __tablename__ == "courses"
+    __tablename__ = "courses"
     
     id = Column(Integer, primary_key=True, index=True)
     title = Column(String, index=True)
@@ -20,3 +20,6 @@ class Course(Base):
     instructor = relationship("User", back_populates="courses_teaching")
     students = relationship("User", secondary=user_course, back_populates="courses_enrolled")
     assignments = relationship("Assignment", back_populates="course")
+    
+    def __repr__(self):
+        return f"<Course(id = {self.id}, title = '{self.title}', instructor_id = {self.instructor_id})>"
