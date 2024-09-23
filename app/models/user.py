@@ -1,5 +1,6 @@
 from sqlalchemy import Column, Integer, String, Boolean
-
+from sqlalchemy.orm import relationship
+from app.models.course import user_course
 from app.db.base import Base
 
 class User(Base):
@@ -20,3 +21,10 @@ class User(Base):
     
     # Gives certain users more privileges
     is_superuser = Column(Boolean, default=False)
+    
+    # Relationships with the course model
+    courses_teaching = relationship("Course", back_populates="instructor")
+    courses_enrolled = relationship("Course", secondary=user_course, back_populates="students")
+    
+    def __repr__(self):
+        return f"<User(id = {self.id}, email = '{self.email}', is_active = {self.is_active})>"
