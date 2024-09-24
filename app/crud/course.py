@@ -30,3 +30,25 @@ def update_course(db: Session, course_id: int, course_update: CourseUpdate) -> O
         db.refresh(db_course)
         
     return db_course
+
+def delete_course(db: Session, course_id: int) -> bool:
+    db_course = get_course(db, course_id)
+    
+    if db_course:
+        db.delete(db_course)
+        db.commit()
+        return True
+    
+    return False
+
+def enroll_student(db: Session, course_id: int, student_id: int) -> Optional[Course]:
+    course = get_course(db, course_id)
+    
+    student = db.query(User).filter(User.id == student_id).first()
+    
+    if course and student:
+        course.students.append(student)
+        db.commit()
+        db.refresh(course)
+        
+    return course
