@@ -18,3 +18,11 @@ class Course(CourseBase):
     class Config:
         from_attributes = True
         
+# List of student IDs
+class CourseWithStudents(Course):
+    students: List[int] = []
+    
+# Full course data as stored in DB
+class CourseInDB(Course):
+    students: List[int] = []
+    assignments: List[int] = []
