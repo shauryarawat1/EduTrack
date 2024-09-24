@@ -10,6 +10,12 @@ class CourseBase(Optional):
 class CourseCreate(CourseBase):
     pass
 
+# Update course information
+
+class CourseUpdate(BaseModel):
+    title: Optional[str] = None
+    description: Optional[str] = None
+
 # Contains basic information returned by API
 class Course(CourseBase):
     id: int
