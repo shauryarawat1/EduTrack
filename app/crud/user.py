@@ -2,6 +2,7 @@ from sqlalchemy.orm import Session
 from app.models.user import User
 from app.schemas.user import UserCreate
 from passlib.context import CryptContext
+from app.core.auth import get_password_hash, verify_password
 
 # Using passlib for password hashing
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -20,7 +21,7 @@ def get_users(db: Session, skip: int = 0, limit: int = 100):
 
 # Create new user, hashing password before storage
 def create_user(db: Session, user: UserCreate):
-    hashed_password = pwd_context.hash(user.password)
+    hashed_password = get_password_hash(user.password)
     db_user = User(email = user.email, hashed_password = hashed_password)
     
     db.add(db_user)
@@ -28,3 +29,17 @@ def create_user(db: Session, user: UserCreate):
     db.refresh(db_user)
     
     return db_user
+
+# Authenticates user with email and password
+
+def authenticate_user(db: Session, email: str, password: str):
+    user = get_user_by_email(db, email)
+    
+    if not user:
+        return False
+    
+    if not verify_password(password, user.hashed_password):
+        return False
+    
+    return user
+
