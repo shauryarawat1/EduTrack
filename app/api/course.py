@@ -34,3 +34,48 @@ def read_course(course_id: int, db: Session = Depends(get_db)):
 def read_courses(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     courses = course_crud.get_courses(db, skip=skip, limit=limit)
     return courses
+
+# Update course
+
+@router.put("/{course_id}", response_model=Course)
+
+def update_course(
+    course_id: int,
+    course_update: CourseUpdate,
+    db: Session = Depends(get_db)
+):
+    db_course = course_crud.update_course(db, course_id=course_id, course_update=course_update)
+    
+    if db_course is None:
+        raise HTTPException(status_code=404, detail="Course not found")
+    
+    return db_course
+
+# Delete a course
+
+@router.delete("/{course_id}", status_code=status.HTTP_204_NO_CONTENT)
+
+def delete_course(
+    course_id: int,
+    db: Session = Depends(get_db),
+):
+    result = course_crud.delete_course(db, course_id=course_id)
+    
+    if not result:
+        raise HTTPException(status_code=404, detail="Course not found")
+    
+# Enroll a student in course
+
+@router.post("/{course_id}/enroll/{student_id}", response_model=Course)
+
+def enroll_student_in_course(
+    course_id: int,
+    student_id: int,
+    db: Session = Depends(get_db),
+):
+    db_course = course_crud.enroll_student(db, course_id=course_id, student_id=student_id)
+    
+    if db_course is None:
+        raise HTTPException(status_code=404, detail="Course or student not found")
+    
+    return db_course
