@@ -4,6 +4,7 @@ from app.schemas.user import UserCreate
 from passlib.context import CryptContext
 from app.core.auth import get_password_hash, verify_password
 
+
 # Using passlib for password hashing
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
