@@ -5,6 +5,7 @@ from sqlalchemy.orm import sessionmaker
 from fastapi.testclient import TestClient
 from app.main import app
 from app.db.base import Base, get_db
+from app.core.security import UserRole
 
 # Load environment variables
 load_dotenv()
@@ -44,10 +45,38 @@ client = TestClient(app)
 
 def test_create_user():
     response = client.post(
-        "/api/v1/users/",  # Updated endpoint
-        json={"email": "test@example.com", "password": "testpassword"}
+        "/api/v1/users/register",  # Updated endpoint
+        json={"email": "test@example.com", "password": "testpassword", "role" : UserRole.STUDENT}
     )
     assert response.status_code == 200, f"Response: {response.json()}"
     data = response.json()
     assert data["email"] == "test@example.com"
     assert "id" in data
+    assert data["role"] == UserRole.STUDENT
+    
+def test_create_user_duplicate_email():
+    response = client.post(
+        "/api/v1/users/register",
+        json = {"email": "test@example.com", "password": "testpassowrd", "role": UserRole.STUDENT}
+    )
+    
+    assert response.status_code == 400
+    assert "Email already registered" in response.json()["detail"]
+    
+def test_user_login():
+    # First, create a user
+    client.post(
+        "/api/v1/users/register",
+        json={"email": "login_test@example.com", "password": "testpassword", "role": UserRole.STUDENT}
+    )
+    
+    # Now, try to login
+    response = client.post(
+        "/api/v1/auth/token",
+        data={"username": "login_test@example.com", "password": "testpassword"}
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert "access_token" in data
+    assert data["token_type"] == "bearer"
+    
