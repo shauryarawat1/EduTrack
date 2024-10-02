@@ -1,8 +1,10 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app.crud import user as user_crud
-from app.schemas.user import User, UserCreate
+from app.schemas.user import User, UserCreate, UserUpdate
 from app.db.base import get_db
+from app.api.deps import get_current_user
+from app.core.security import UserRole, check_user_role
 
 # Router to group related routes
 router = APIRouter()
@@ -33,3 +35,16 @@ def read_user(user_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="User not found")
     
     return db_user
+
+# Allows authenticated users to get their own information 
+@router.get("/me", response_model=User)
+def read_user_me(current_user: User = Depends(get_current_user)):
+    return current_user
+
+@router.put("/me", response_model=User)
+def update_user_me(
+    user_update: UserUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    return user_crud.update_user(db, user_id=current_user.id, user=user_update)
