@@ -80,3 +80,54 @@ def test_user_login():
     assert "access_token" in data
     assert data["token_type"] == "bearer"
     
+def test_read_users_me():
+    # Create user and get token
+    client.post(
+        "/api/v1/users/register",
+        json={"email": "me_test@example.com", "password": "testpassword", "role": UserRole.STUDENT}
+    )
+    login_response = client.post(
+        "/api/v1/auth/token",
+        data={"username": "me_test@example.com", "password": "testpassword"}
+    )
+    token = login_response.json()["access_token"]
+    
+    # Use token to get user's data
+    
+    response = client.get(
+        "/api/v1/users/me",
+        headers={"Authorization": f"Bearer {token}"}
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert data["email"] == "me_test@example.com"
+    assert data["role"] == UserRole.STUDENT
+    
+def test_update_user_me():
+     # First, create a user and get a token
+    client.post(
+        "/api/v1/users/register",
+        json={"email": "update_test@example.com", "password": "testpassword", "role": UserRole.STUDENT}
+    )
+    login_response = client.post(
+        "/api/v1/auth/token",
+        data={"username": "update_test@example.com", "password": "testpassword"}
+    )
+    token = login_response.json()["access_token"]
+    
+    # Now, use the token to update the user's own data
+    response = client.put(
+        "/api/v1/users/me",
+        headers={"Authorization": f"Bearer {token}"},
+        json={"email": "updated_test@example.com", "password": "newpassword"}
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert data["email"] == "updated_test@example.com"
+
+    # Verify that we can login with the new credentials
+    login_response = client.post(
+        "/api/v1/auth/token",
+        data={"username": "updated_test@example.com", "password": "newpassword"}
+    )
+    assert login_response.status_code == 200
