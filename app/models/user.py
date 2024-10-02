@@ -1,7 +1,8 @@
-from sqlalchemy import Column, Integer, String, Boolean
+from sqlalchemy import Column, Integer, String, Boolean, Enum
 from sqlalchemy.orm import relationship
 from app.models.course import user_course
 from app.db.base import Base
+from app.core.security import UserRole
 
 class User(Base):
     # specifies name of table in database
@@ -21,6 +22,9 @@ class User(Base):
     
     # Gives certain users more privileges
     is_superuser = Column(Boolean, default=False)
+    
+    # Gives student role by default to the user
+    role = Column(Enum(UserRole), default = UserRole.STUDENT)
     
     # Relationships with the course model
     courses_teaching = relationship("Course", back_populates="instructor")
