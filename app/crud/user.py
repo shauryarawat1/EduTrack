@@ -1,9 +1,8 @@
 from sqlalchemy.orm import Session
 from app.models.user import User
-from app.schemas.user import UserCreate
+from app.schemas.user import UserCreate, UserUpdate
 from passlib.context import CryptContext
 from app.core.auth import get_password_hash, verify_password
-
 
 # Using passlib for password hashing
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -43,4 +42,24 @@ def authenticate_user(db: Session, email: str, password: str):
         return False
     
     return user
+
+def update_user(db: Session, user_id: int, user: UserUpdate):
+    db_user = get_user(db, user_id)
+    
+    if not db_user:
+        return None
+    
+    # Allow partial updates
+    update_data = user.dict(exclude_unset=True)
+    
+    if 'password' in update_data:
+        update_data['hashed_password'] = get_password_hash(update_data['password'])
+        del update_data['password']
+        
+    for field, value in update_data.items():
+        setattr(db_user, field, value)
+        
+    db.commit()
+    db.refresh(db_user)
+    return db_user
 
