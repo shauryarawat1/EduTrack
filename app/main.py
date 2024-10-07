@@ -1,17 +1,24 @@
 from fastapi import FastAPI
-from app.api import courses, users, auth
-from app.db.base import Base
-from app.db.session import engine
+from starlette.middleware.cors import CORSMiddleware
 
-# Create tables
-Base.metadata.create_all(bind=engine)
+from app.api.api_v1.api import api_router
+from app.core.config import settings
 
-app = FastAPI(title="EduTrack")
+app = FastAPI(title = settings.PROJECT_NAME, openapi_url = f"{settings.API_V1_STR}/openapi.json")
 
-app.include_router(auth.router, prefix="/api/v1/auth", tags=["auth"])
-app.include_router(users.router, prefix="/api/v1/users", tags=["users"])
-app.include_router(courses.router, prefix="/api/v1/courses", tags=["courses"])
+# Set all CORS enabled functions
+
+if settings.BACKEND_CORS_ORIGINS:
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins = [str(origin) for origin in settings.BACKEND_CORS_ORIGINS],
+        allow_credentials = True,
+        allow_methods = ["*"],
+        allow_headers = ["*"]
+    )
+    
+app.include_router(api_router, prefix= settings.API_V1_STR)
 
 @app.get("/")
-def read_root():
+def root():
     return {"message": "Welcome to EduTrack API"}
