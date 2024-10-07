@@ -1,53 +1,54 @@
 from sqlalchemy.orm import Session
-from app.models.models import User, Course
-from app.schemas.course import CourseCreate, CourseUpdate
 from typing import List, Optional
+from app.models.course import Course
+from app.models.user import User
+from app.schemas.course import CourseCreate, CourseUpdate
 
-def get_course(db: Session, course_id: int) -> Optional[Course]:
-    return db.query(Course).filter(Course.id == course_id).first()
+def get(db: Session, id: int) -> Optional[Course]:
+    return db.query(Course).filter(Course.id == id).first()
 
-def get_courses(db: Session, skip: int = 0, limit: int = 100) -> List[Course]:
+def get_multi(db: Session, skip: int = 0, limit: int = 100) -> List[Course]:
     return db.query(Course).offset(skip).limit(limit).all()
 
-def create_course(db: Session, course: CourseCreate, instructor_id: int) -> Course:
-    db_course = Course(**course.dict(), instructor_id = instructor_id)
-    db.add(db_course)
+def create_with_instructor(db: Session, obj_in: CourseCreate, instructor_id: int) -> Course:
+    db_obj = Course(**obj_in.dict(), instructor_id=instructor_id)
+    db.add(db_obj)
     db.commit()
-    db.refresh(db_course)
-    return db_course
+    db.refresh(db_obj)
+    return db_obj
 
-def update_course(db: Session, course_id: int, course_update: CourseUpdate) -> Optional[Course]:
-    db_course = get_course(db, course_id)
-    
-    if db_course:
-        update_data = course_update.dict(exclude_unset=True)
-        
-        for key, value in update_data.items():
-            setattr(db_course, key, value)
-            
-        db.commit()
-        db.refresh(db_course)
-        
-    return db_course
+def update(db: Session, db_obj: Course, obj_in: CourseUpdate) -> Course:
+    update_data = obj_in.dict(exclude_unset=True)
+    for field, value in update_data.items():
+        setattr(db_obj, field, value)
+    db.add(db_obj)
+    db.commit()
+    db.refresh(db_obj)
+    return db_obj
 
-def delete_course(db: Session, course_id: int) -> bool:
-    db_course = get_course(db, course_id)
-    
-    if db_course:
-        db.delete(db_course)
+def remove(db: Session, id: int) -> Optional[Course]:
+    obj = db.query(Course).get(id)
+    if obj:
+        db.delete(obj)
         db.commit()
-        return True
-    
-    return False
+    return obj
 
-def enroll_student(db: Session, course_id: int, student_id: int) -> Optional[Course]:
-    course = get_course(db, course_id)
-    
-    student = db.query(User).filter(User.id == student_id).first()
-    
-    if course and student:
-        course.students.append(student)
-        db.commit()
-        db.refresh(course)
-        
-    return course
+def add_student(db: Session, db_obj: Course, student: User) -> Course:
+    db_obj.students.append(student)
+    db.add(db_obj)
+    db.commit()
+    db.refresh(db_obj)
+    return db_obj
+
+def remove_student(db: Session, db_obj: Course, student: User) -> Course:
+    db_obj.students.remove(student)
+    db.add(db_obj)
+    db.commit()
+    db.refresh(db_obj)
+    return db_obj
+
+def get_courses_by_instructor(db: Session, instructor_id: int) -> List[Course]:
+    return db.query(Course).filter(Course.instructor_id == instructor_id).all()
+
+def get_courses_by_student(db: Session, student_id: int) -> List[Course]:
+    return db.query(Course).filter(Course.students.any(id=student_id)).all()

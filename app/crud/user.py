@@ -1,65 +1,60 @@
 from sqlalchemy.orm import Session
-from app.models.models import User
+from typing import List, Optional
+from app.models.user import User
 from app.schemas.user import UserCreate, UserUpdate
-from passlib.context import CryptContext
-from app.core.auth import get_password_hash, verify_password
+from app.core.security import get_password_hash, verify_password
 
-# Using passlib for password hashing
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+def get(db: Session, id: int) -> Optional[User]:
+    return db.query(User).filter(User.id == id).first()
 
-# Retrieves user by ID
-def get_user(db: Session, user_id: int):
-    return db.query(User).filter(User.id == user_id).first()
-
-# Find user by Email
-def get_user_by_email(db: Session, email: str):
+def get_by_email(db: Session, email: str) -> Optional[User]:
     return db.query(User).filter(User.email == email).first()
 
-# Retrieve list of users
-def get_users(db: Session, skip: int = 0, limit: int = 100):
+def get_multi(db: Session, skip: int = 0, limit: int = 100) -> List[User]:
     return db.query(User).offset(skip).limit(limit).all()
 
-# Create new user, hashing password before storage
-def create_user(db: Session, user: UserCreate):
-    hashed_password = get_password_hash(user.password)
-    db_user = User(email = user.email, hashed_password = hashed_password, is_superuser = user.is_superuser if hasattr(user, 'is_superuser') else False)
-    
-    db.add(db_user)
+def create(db: Session, obj_in: UserCreate) -> User:
+    db_obj = User(
+        email=obj_in.email,
+        hashed_password=get_password_hash(obj_in.password),
+        role=obj_in.role
+    )
+    db.add(db_obj)
     db.commit()
-    db.refresh(db_user)
-    
-    return db_user
+    db.refresh(db_obj)
+    return db_obj
 
-# Authenticates user with email and password
+def update(db: Session, db_obj: User, obj_in: UserUpdate) -> User:
+    update_data = obj_in.dict(exclude_unset=True)
+    if update_data.get("password"):
+        hashed_password = get_password_hash(update_data["password"])
+        del update_data["password"]
+        update_data["hashed_password"] = hashed_password
+    for field, value in update_data.items():
+        setattr(db_obj, field, value)
+    db.add(db_obj)
+    db.commit()
+    db.refresh(db_obj)
+    return db_obj
 
-def authenticate_user(db: Session, email: str, password: str):
-    user = get_user_by_email(db, email)
-    
+def remove(db: Session, id: int) -> Optional[User]:
+    obj = db.query(User).get(id)
+    if obj:
+        db.delete(obj)
+        db.commit()
+    return obj
+
+def authenticate(db: Session, email: str, password: str) -> Optional[User]:
+    user = get_by_email(db, email=email)
     if not user:
-        return False
-    
+        return None
     if not verify_password(password, user.hashed_password):
-        return False
-    
+        return None
     return user
 
-def update_user(db: Session, user_id: int, user: UserUpdate):
-    db_user = get_user(db, user_id)
-    
-    if not db_user:
-        return None
-    
-    # Allow partial updates
-    update_data = user.dict(exclude_unset=True)
-    
-    if 'password' in update_data:
-        update_data['hashed_password'] = get_password_hash(update_data['password'])
-        del update_data['password']
-        
-    for field, value in update_data.items():
-        setattr(db_user, field, value)
-        
-    db.commit()
-    db.refresh(db_user)
-    return db_user
+def is_active(user: User) -> bool:
+    return user.is_active
+
+def is_superuser(user: User) -> bool:
+    return user.role == "admin"
 
