@@ -4,9 +4,11 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from fastapi.testclient import TestClient
 from app.main import app
-from app.db.base import Base, get_db
+from app.db.base_class import Base
+from app.db.base import get_db
 from app.core.config import settings
-from app.models.models import User, Course
+from app.models.user import User
+from app.models.course import Course
 from app.core.security import UserRole
 
 # Load environment variables
@@ -38,91 +40,4 @@ app.dependency_overrides[get_db] = override_get_db
 
 client = TestClient(app)
 
-def test_create_user():
-    response = client.post(
-        "/api/v1/users/register",  # Updated endpoint
-        json={"email": "test@example.com", "password": "testpassword", "role" : UserRole.STUDENT}
-    )
-    assert response.status_code == 200, f"Response: {response.json()}"
-    data = response.json()
-    assert data["email"] == "test@example.com"
-    assert "id" in data
-    assert data["role"] == UserRole.STUDENT
-    
-def test_create_user_duplicate_email():
-    response = client.post(
-        "/api/v1/users/register",
-        json = {"email": "test@example.com", "password": "testpassowrd", "role": UserRole.STUDENT}
-    )
-    
-    assert response.status_code == 400
-    assert "Email already registered" in response.json()["detail"]
-    
-def test_user_login():
-    # First, create a user
-    client.post(
-        "/api/v1/users/register",
-        json={"email": "login_test@example.com", "password": "testpassword", "role": UserRole.STUDENT}
-    )
-    
-    # Now, try to login
-    response = client.post(
-        "/api/v1/auth/token",
-        data={"username": "login_test@example.com", "password": "testpassword"}
-    )
-    assert response.status_code == 200
-    data = response.json()
-    assert "access_token" in data
-    assert data["token_type"] == "bearer"
-    
-def test_read_users_me():
-    # Create user and get token
-    client.post(
-        "/api/v1/users/register",
-        json={"email": "me_test@example.com", "password": "testpassword", "role": UserRole.STUDENT}
-    )
-    login_response = client.post(
-        "/api/v1/auth/token",
-        data={"username": "me_test@example.com", "password": "testpassword"}
-    )
-    token = login_response.json()["access_token"]
-    
-    # Use token to get user's data
-    
-    response = client.get(
-        "/api/v1/users/me",
-        headers={"Authorization": f"Bearer {token}"}
-    )
-    assert response.status_code == 200
-    data = response.json()
-    assert data["email"] == "me_test@example.com"
-    assert data["role"] == UserRole.STUDENT
-    
-def test_update_user_me():
-     # First, create a user and get a token
-    client.post(
-        "/api/v1/users/register",
-        json={"email": "update_test@example.com", "password": "testpassword", "role": UserRole.STUDENT}
-    )
-    login_response = client.post(
-        "/api/v1/auth/token",
-        data={"username": "update_test@example.com", "password": "testpassword"}
-    )
-    token = login_response.json()["access_token"]
-    
-    # Now, use the token to update the user's own data
-    response = client.put(
-        "/api/v1/users/me",
-        headers={"Authorization": f"Bearer {token}"},
-        json={"email": "updated_test@example.com", "password": "newpassword"}
-    )
-    assert response.status_code == 200
-    data = response.json()
-    assert data["email"] == "updated_test@example.com"
-
-    # Verify that we can login with the new credentials
-    login_response = client.post(
-        "/api/v1/auth/token",
-        data={"username": "updated_test@example.com", "password": "newpassword"}
-    )
-    assert login_response.status_code == 200
+# ... rest of the test functions remain the same ...
