@@ -1,26 +1,27 @@
+from typing import Optional
 from pydantic import BaseModel, EmailStr
 from app.core.security import UserRole
-from app.models.models import User
 
-# Fields common to all user schemas
 class UserBase(BaseModel):
-    email: EmailStr
-    role: UserRole = UserRole.STUDENT
+    email: Optional[EmailStr] = None
+    is_active: Optional[bool] = None
+    role: Optional[UserRole] = UserRole.STUDENT
     
-# For creating new users
 class UserCreate(UserBase):
+    email: EmailStr
     password: str
     
-# For updating users
 class UserUpdate(UserBase):
-    password: str | None = None
+    password: Optional[str] = None
     
-# Represents the user as returned by API
-class User(UserBase):
-    id: int
-    is_active: bool
-    is_superuser: bool
+class UserInDBBase(UserBase):
+    id: Optional[int] = None
     
     class Config:
-        # Allows pydantic to work with SQLAlchemy models
         from_attributes = True
+        
+class User(UserInDBBase):
+    pass
+
+class UserInDB(UserInDBBase):
+    hashed_password: str
