@@ -6,6 +6,7 @@ from fastapi.testclient import TestClient
 from app.main import app
 from app.db.base import Base, get_db
 from app.core.security import UserRole
+from app.core.config import settings
 
 # Load environment variables
 load_dotenv()
@@ -21,7 +22,7 @@ DB_PORT = os.getenv("DB_PORT")
 DB_NAME = os.getenv("DB_NAME")
 DB_SSLMODE = os.getenv("DB_SSLMODE")
 
-SQLALCHEMY_DATABASE_URL = f"postgresql://{DB_USERNAME}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}?sslmode={DB_SSLMODE}"
+SQLALCHEMY_DATABASE_URL = settings.SQLALCHEMY_DATABASE_URI
 
 # Create the SQLAlchemy engine
 engine = create_engine(SQLALCHEMY_DATABASE_URL)

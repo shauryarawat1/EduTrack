@@ -16,14 +16,17 @@ class Settings(BaseSettings):
     DB_HOST: str
     DB_PORT: str
     DB_NAME: str
+    DB_NAME_TEST: str | None = None
     DB_SSLMODE: str = "prefer"
     
     @property
     # Constructs database URI
     def SQLALCHEMY_DATABASE_URI(self):
-        return f"postgresql://{self.DB_USERNAME}:{self.DB_PASSWORD}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}?sslmode={self.DB_SSLMODE}"
+        db_name = self.DB_NAME_TEST or self.DB_NAME
+        return f"postgresql://{self.DB_USERNAME}:{self.DB_PASSWORD}@{self.DB_HOST}:{self.DB_PORT}/{db_name}?sslmode={self.DB_SSLMODE}"
     
     class Config:
         env_file = ".env"
+        extra = "allow"
         
 settings = Settings()
