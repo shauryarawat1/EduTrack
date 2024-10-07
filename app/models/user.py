@@ -3,6 +3,7 @@ from sqlalchemy.orm import relationship
 from app.models.course import user_course
 from app.db.base import Base
 from app.core.security import UserRole
+from app.models.association import user_course
 
 class User(Base):
     # specifies name of table in database

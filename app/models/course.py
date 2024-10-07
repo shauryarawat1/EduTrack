@@ -1,6 +1,7 @@
 from sqlalchemy import Column, Integer, String, ForeignKey, Table
 from sqlalchemy.orm import relationship
 from app.db.base import Base
+from app.models.association import user_course
 
 # Association table for many-to-one relationship b/w User and Course
 user_course = Table('user_course', Base.metadata,

@@ -24,6 +24,7 @@ def get_db():
 # Importing all the models from the folder (User, Course, etc)
 from app.models.user import User
 from app.models.course import Course
+from app.models.association import user_course
 
 # Create tables
 Base.metadata.create_all(bind=engine)
