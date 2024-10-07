@@ -5,23 +5,17 @@ from sqlalchemy.orm import sessionmaker
 from fastapi.testclient import TestClient
 from app.main import app
 from app.db.base import Base, get_db
-from app.core.security import UserRole
 from app.core.config import settings
+from app.models.models import User, Course
+from app.core.security import UserRole
 
 # Load environment variables
 load_dotenv()
 
 # Set the database to the test database
-os.environ["DB_NAME"] = "edutrack_test"
+os.environ["DB_NAME_TEST"] = "edutrack_test"
 
-# Construct the database URL
-DB_USERNAME = os.getenv("DB_USERNAME")
-DB_PASSWORD = os.getenv("DB_PASSWORD")
-DB_HOST = os.getenv("DB_HOST")
-DB_PORT = os.getenv("DB_PORT")
-DB_NAME = os.getenv("DB_NAME")
-DB_SSLMODE = os.getenv("DB_SSLMODE")
-
+# Use the SQLALCHEMY_DATABASE_URI from settings
 SQLALCHEMY_DATABASE_URL = settings.SQLALCHEMY_DATABASE_URI
 
 # Create the SQLAlchemy engine

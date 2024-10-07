@@ -1,6 +1,5 @@
 from sqlalchemy.orm import Session
-from app.models.course import Course
-from app.models.user import User
+from app.models.models import User, Course
 from app.schemas.course import CourseCreate, CourseUpdate
 from typing import List, Optional
 

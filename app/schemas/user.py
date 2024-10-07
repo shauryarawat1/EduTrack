@@ -1,5 +1,6 @@
 from pydantic import BaseModel, EmailStr
 from app.core.security import UserRole
+from app.models.models import User
 
 # Fields common to all user schemas
 class UserBase(BaseModel):

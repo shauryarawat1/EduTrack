@@ -1,7 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app.crud import user as user_crud
-from app.schemas.user import User, UserCreate, UserUpdate
+from app.schemas.user import UserCreate, UserUpdate
+from app.models.models import User
 from app.db.base import get_db
 from app.api.deps import get_current_user
 from app.core.security import UserRole, check_user_role

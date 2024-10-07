@@ -1,5 +1,6 @@
 from pydantic import BaseModel
 from typing import List, Optional
+from app.models.models import Course
 
 # Defines basic attributes of course
 class CourseBase(Optional):
